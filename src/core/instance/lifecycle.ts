@@ -144,16 +144,31 @@ export function lifecycleMixin(Vue: typeof Component) {
   }
 }
 
+/**
+ * 
+ * @param vm vue实例
+ * @param el 挂载节点
+ * @param hydrating 是否开启水合
+ * @returns 返回挂载后的实例
+ */
 export function mountComponent(
   vm: Component,
   el: Element | null | undefined,
   hydrating?: boolean
 ): Component {
   vm.$el = el
+  // 如果不存在render函数
   if (!vm.$options.render) {
+    // 给一个创建空VNode的函数作为render函数
     // @ts-expect-error invalid type
     vm.$options.render = createEmptyVNode
+    // 如果是开发模式则报错
     if (__DEV__) {
+      // 检查如果
+      // 1. 有模版且模版不是传入的选择器，类似#app， 而是template: '<div>hello</div>' 
+      // 2. 或者options上有el属性
+      // 3. 或者mount(el) el有值
+      // 则说明template需要编译，而没有render函数的话需要报错
       /* istanbul ignore if */
       if (
         (vm.$options.template && vm.$options.template.charAt(0) !== '#') ||
@@ -174,9 +189,11 @@ export function mountComponent(
       }
     }
   }
+  // 调用beforeMount Hook
   callHook(vm, 'beforeMount')
 
   let updateComponent
+  // 如果在开发模式下开启了性能检测
   /* istanbul ignore if */
   if (__DEV__ && config.performance && mark) {
     updateComponent = () => {
@@ -184,23 +201,31 @@ export function mountComponent(
       const id = vm._uid
       const startTag = `vue-perf-start:${id}`
       const endTag = `vue-perf-end:${id}`
-
+      // 添加一个开始标记
       mark(startTag)
+      // 执行render函数，生成虚拟dom
       const vnode = vm._render()
+      //  添加一个结束标记
       mark(endTag)
+      // 记录渲染时间
       measure(`vue ${name} render`, startTag, endTag)
-
+      
+      // 添加一个开始标记
       mark(startTag)
+      // 虚拟dom转为真实dom
       vm._update(vnode, hydrating)
+      //  添加一个结束标记
       mark(endTag)
+      // 记录渲染时间
       measure(`vue ${name} patch`, startTag, endTag)
     }
   } else {
+    // 不开启性能检测时先执行render函数，生成虚拟dom，然后执行update生成真实dom就可以了
     updateComponent = () => {
       vm._update(vm._render(), hydrating)
     }
   }
-
+  // 添加before函数，执行时，如果已经挂载并且未销毁则调用beforeUpdate函数
   const watcherOptions: WatcherOptions = {
     before() {
       if (vm._isMounted && !vm._isDestroyed) {
@@ -208,24 +233,34 @@ export function mountComponent(
       }
     }
   }
-
+  // 开发模式下添加2个调试函数
   if (__DEV__) {
     watcherOptions.onTrack = e => callHook(vm, 'renderTracked', [e])
     watcherOptions.onTrigger = e => callHook(vm, 'renderTriggered', [e])
   }
 
+  // 创建一个Watcher，用来渲染调用mount的vue
+  // 一般这个vue实例是new Vue 出来的最外层的vue实例
+  // new Watcher会触发一次updateComponent，来更新视图
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
   new Watcher(
+    // 当前vue实例
     vm,
+    // 更新函数
     updateComponent,
+    // 空函数作为回调函数
     noop,
+    // watcher选项
     watcherOptions,
     true /* isRenderWatcher */
   )
+  // 执行更新函数后水合关闭
   hydrating = false
-
+  // 兼容vue3 中setup中的watcher 
+  // 在 src\v3\apiWatch.ts
+  // 中如果 watch的options中flush为pre则保证该watcher在挂载前执行
   // flush buffer for flush: "pre" watchers queued in setup()
   const preWatchers = vm._preWatchers
   if (preWatchers) {
@@ -233,7 +268,8 @@ export function mountComponent(
       preWatchers[i].run()
     }
   }
-
+  // 判断$vnode是否为空，如果为空，则说明是根组件，它的mounted钩子直接触发
+  // 如果不为空，说明是子组件，它的mounted钩子需要等待父组件的render函数触发子组件的创建，子组件创建过程中会调用自己的挂载逻辑触发mounted钩子
   // manually mounted instance, call mounted on self
   // mounted is called for render-created child components in its inserted hook
   if (vm.$vnode == null) {

@@ -76,7 +76,11 @@ export default class VNode {
     return this.componentInstance
   }
 }
-
+/**
+ * @description 创建空的vnode
+ * @param text 内容字符串
+ * @returns 
+ */
 export const createEmptyVNode = (text: string = '') => {
   const node = new VNode()
   node.text = text

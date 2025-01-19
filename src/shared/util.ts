@@ -240,6 +240,7 @@ export function toArray(list: any, start?: number): Array<any> {
   return ret
 }
 
+// 合并两个对象，_from 合并到to上面
 /**
  * Mix properties into target object.
  */

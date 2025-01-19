@@ -107,7 +107,20 @@ export default class Watcher implements DepTarget {
     this.newDeps = []
     this.depIds = new Set()
     this.newDepIds = new Set()
+    // 留存一个监听的值，作为打印使用
     this.expression = __DEV__ ? expOrFn.toString() : ''
+    // 判断expOrFn是函数还是字符串
+    // vue2 中可以
+    // watch: {
+    //   // 深层监听
+    //   'a.b.c': {
+    //     handler(val) {
+    //       console.log('deep property changed:', val)
+    //     },
+    //     deep: true
+    //   }
+    // }
+    // 此时expOrFn是字符串，而Watcher是渲染Watcher、computed函数、函数行的的watch时，则是函数
     // parse expression for getter
     if (isFunction(expOrFn)) {
       this.getter = expOrFn
@@ -124,6 +137,7 @@ export default class Watcher implements DepTarget {
           )
       }
     }
+    // 执行这个get函数，get函数执行时会触发依赖收集
     this.value = this.lazy ? undefined : this.get()
   }
 

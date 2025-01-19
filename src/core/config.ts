@@ -32,8 +32,22 @@ export interface Config {
   // legacy
   _lifecycleHooks: Array<string>
 }
-
+// Vue.config配置
+// 修改Vue.config可以实现配置的更改，之所以修改Vue.config，能够修改这个导出，是因为在initGlobalAPI时，
+// const configDef: Record<string, any> = {}
+//   configDef.get = () => config
+//   if (__DEV__) {
+//     configDef.set = () => {
+//       warn(
+//         'Do not replace the Vue.config object, set individual fields instead.'
+//       )
+//     }
+//   }
+//   Object.defineProperty(Vue, 'config', configDef)
+// 这样只能Vue.config.silent = true  而不能直接修改Vue.config = {}
+// 因为直接Vue.config = {}，会导致覆盖引用，而导致配置不起作用
 export default {
+  // 合并策略
   /**
    * Option merge strategies (used in core/util/options)
    */

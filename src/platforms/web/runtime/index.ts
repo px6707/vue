@@ -32,11 +32,18 @@ extend(Vue.options.components, platformComponents)
 // install platform patch function
 Vue.prototype.__patch__ = inBrowser ? patch : noop
 
+
 // public mount method
+/**
+ * @description 公共的挂载函数，只具有挂载能力
+ * @param {string | Element} el 挂载节点
+ * @param {boolean} hydrating 开启水合，用于服务器渲染，给服务端返回的静态HTML添加时间和响应式特性
+ */
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
 ): Component {
+  // 查找到对应的挂载节点
   el = el && inBrowser ? query(el) : undefined
   return mountComponent(this, el, hydrating)
 }
