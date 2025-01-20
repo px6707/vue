@@ -4,10 +4,28 @@ import type { VNodeData, VNodeWithData } from 'types/vnode'
 
 export const parseStyleText = cached(function (cssText) {
   const res = {}
+  // 匹配分号，但不匹配括号内的分号
   const listDelimiter = /;(?![^(]*\))/g
+  // 匹配冒号和冒号后面的内容
   const propertyDelimiter = /:(.+)/
+  // css属性使用分号分隔，然后循环遍历
+  // 输入"color: red; background: url(http://example.com/bg.jpg); margin: 10px"
+  //  按分号分割（不分割括号内的分号）
+  // [
+  //   "color: red",
+  //   "background: url(http://example.com/bg.jpg)",
+  //   "margin: 10px"
+  // ]
+
+
   cssText.split(listDelimiter).forEach(function (item) {
     if (item) {
+      // 按冒号分割每个项目
+      // {
+      //   color: "red",
+      //   background: "url(http://example.com/bg.jpg)",
+      //   margin: "10px"
+      // }
       const tmp = item.split(propertyDelimiter)
       tmp.length > 1 && (res[tmp[0].trim()] = tmp[1].trim())
     }

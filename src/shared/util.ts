@@ -163,6 +163,7 @@ export function hasOwn(obj: Object | Array<any>, key: string): boolean {
   return hasOwnProperty.call(obj, key)
 }
 
+// 缓存机制，相同的string返回相同的结果，不会重复执行
 /**
  * Create a cached version of a pure function.
  */
