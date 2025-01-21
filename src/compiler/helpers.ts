@@ -17,6 +17,10 @@ export function pluckModuleFunction<T, K extends keyof T>(
   return modules ? (modules.map(m => m[key]).filter(_ => _) as any) : []
 }
 
+// 关于property和attribute的区别
+// property是DOM节点对象本身具有的属性，可以有多种数据类型，包括了value、type等；property更新不会引起attribute更新，大小写敏感，href返回完整url
+// attribute是标签上的特性，只能有字符串类型，例如id、class等;attribute更新会引起property更新，大小写不敏感，href返回设置的值
+// 给DOM添加property
 export function addProp(
   el: ASTElement,
   name: string,
@@ -105,6 +109,9 @@ export function addHandler(
   modifiers = modifiers || emptyObject
   // warn prevent and passive modifier
   /* istanbul ignore if */
+  // passive 诉浏览器这个事件处理器不会调用 preventDefault()
+  // 用于优化滚动性能，让浏览器可以立即开始滚动，而不用等待事件处理器执行完成
+  // 因此prevent和passive不能同时使用
   if (__DEV__ && warn && modifiers.prevent && modifiers.passive) {
     warn(
       "passive and prevent can't be used together. " +
@@ -116,14 +123,18 @@ export function addHandler(
   // normalize click.right and click.middle since they don't actually fire
   // this is technically browser-specific, but at least for now browsers are
   // the only target envs that have right/middle clicks.
+  // 如果是鼠标右键
   if (modifiers.right) {
+    // 动态事件名
     if (dynamic) {
+      // contextmenu能够更精确的捕获右键事件
       name = `(${name})==='click'?'contextmenu':(${name})`
     } else if (name === 'click') {
       name = 'contextmenu'
       delete modifiers.right
     }
   } else if (modifiers.middle) {
+    // 如果是鼠标中键
     if (dynamic) {
       name = `(${name})==='click'?'mouseup':(${name})`
     } else if (name === 'click') {
@@ -131,9 +142,12 @@ export function addHandler(
     }
   }
 
+  // 给各种修饰符添加标记
   // check capture modifier
   if (modifiers.capture) {
     delete modifiers.capture
+    // <div @click.capture="handler"> ===》 !click
+    // <div @[eventName].capture="handler"> ===》_p(click,！)
     name = prependModifierMarker('!', name, dynamic)
   }
   if (modifiers.once) {
@@ -145,7 +159,7 @@ export function addHandler(
     delete modifiers.passive
     name = prependModifierMarker('&', name, dynamic)
   }
-
+  // 事件的原生标记
   let events
   if (modifiers.native) {
     delete modifiers.native
@@ -158,17 +172,18 @@ export function addHandler(
   if (modifiers !== emptyObject) {
     newHandler.modifiers = modifiers
   }
-
+  // 事件数组中获取当前事件已存在的处理函数
   const handlers = events[name]
   /* istanbul ignore if */
   if (Array.isArray(handlers)) {
+    // 重要事件放在前面
     important ? handlers.unshift(newHandler) : handlers.push(newHandler)
   } else if (handlers) {
     events[name] = important ? [newHandler, handlers] : [handlers, newHandler]
   } else {
     events[name] = newHandler
   }
-
+  // 有事件的节点不再是普通节点
   el.plain = false
 }
 
