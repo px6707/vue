@@ -47,7 +47,7 @@ export function parseText(
       rawTokens.push((tokenValue = text.slice(lastIndex, index)))
       tokens.push(JSON.stringify(tokenValue))
     }
-    // 获取管道过滤器 _f("uppercase")(message)
+    // 获取管道过滤器 _f("uppercase")(message) 如果没有管道则直接是 message
     // tag token
     const exp = parseFilters(match[1].trim())
     tokens.push(`_s(${exp})`)

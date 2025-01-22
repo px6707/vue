@@ -6,15 +6,20 @@ export const isReservedAttr = makeMap('style,class')
 
 // attributes that should be using props for binding
 const acceptValue = makeMap('input,textarea,option,select,progress')
+// 是否需要使用Property
 export const mustUseProp = (
   tag: string,
   type?: string | null,
   attr?: string
 ): boolean => {
   return (
+    // 如果属性是value，标签是input、textarea、option、select、progress其中之一
     (attr === 'value' && acceptValue(tag) && type !== 'button') ||
+    // 如果属性是selected，标签是option
     (attr === 'selected' && tag === 'option') ||
+    // 如果属性是checked，标签是input
     (attr === 'checked' && tag === 'input') ||
+    // 如果属性是muted，标签是video
     (attr === 'muted' && tag === 'video')
   )
 }

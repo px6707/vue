@@ -28,13 +28,13 @@ export const isSVG = makeMap(
     'polygon,polyline,rect,switch,symbol,text,textpath,tspan,use,view',
   true
 )
-
+// 判断是不是pre标签
 export const isPreTag = (tag?: string): boolean => tag === 'pre'
-
+// 判断是不是html标签或者svg标签
 export const isReservedTag = (tag: string): boolean | undefined => {
   return isHTMLTag(tag) || isSVG(tag)
 }
-
+// 获取标签的命名空间
 export function getTagNamespace(tag: string): string | undefined {
   if (isSVG(tag)) {
     return 'svg'
