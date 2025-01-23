@@ -80,6 +80,7 @@ export function createCompilerCreator(baseCompile: Function): Function {
       }
       compiled.errors = errors
       compiled.tips = tips
+      // 返回编译结果
       return compiled
     }
 

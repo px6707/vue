@@ -76,6 +76,7 @@ export default function model(
     )
   }
 
+  // 返回true，表示需要运行时支持
   // ensure runtime directive metadata
   return true
 }

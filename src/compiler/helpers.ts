@@ -9,7 +9,7 @@ export function baseWarn(msg: string, range?: Range) {
   console.error(`[Vue compiler]: ${msg}`)
 }
 /* eslint-enable no-unused-vars */
-
+// 在module中找到所有对应key的方法
 export function pluckModuleFunction<T, K extends keyof T>(
   modules: Array<T> | undefined,
   key: K
