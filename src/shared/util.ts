@@ -180,6 +180,7 @@ export function cached<R>(fn: (str: string) => R): (sr: string) => R {
  * Camelize a hyphen-delimited string.
  */
 const camelizeRE = /-(\w)/g
+// 转驼峰
 export const camelize = cached((str: string): string => {
   return str.replace(camelizeRE, (_, c) => (c ? c.toUpperCase() : ''))
 })
@@ -373,9 +374,16 @@ export function once<T extends (...args: any[]) => any>(fn: T): T {
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is#polyfill
 export function hasChanged(x: unknown, y: unknown): boolean {
+  // 判断两个值是否相等
+  // 需要判断特殊情况 1. xy是NaN 2. xy是正负0
   if (x === y) {
+    // 虽然x===y,但需要判断x、y是否符号不同
+    // 1/0是Infinity ，但+infinity是 不等于 -infinity
     return x === 0 && 1 / x !== 1 / (y as number)
   } else {
+    // 虽然两个值不等，也需要判断他们是否为NaN
+    // 因为NaN === NaN 是false，x===x 为false 说明是NaN。
+    // 只要x和y都是NaN，就返回false，说明数值没有变化
     return x === x || y === y
   }
 }

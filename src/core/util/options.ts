@@ -24,6 +24,7 @@ import type { ComponentOptions } from 'types/options'
  * how to merge a parent option value and a child option
  * value into the final value.
  */
+// 合并策略对象
 const strats = config.optionMergeStrategies
 
 /**
@@ -36,6 +37,7 @@ if (__DEV__) {
     vm: any,
     key: any
   ) {
+    // 没有传入vm说明不是在实例化的过程中进行的合并，说明el和props属性不是在new的时候指定的
     if (!vm) {
       warn(
         `option "${key}" can only be used during instance ` +
@@ -54,9 +56,10 @@ function mergeData(
   from: Record<string | symbol, any> | null,
   recursive = true
 ): Record<PropertyKey, any> {
+  // 把其他配置，merge到组件自己的配置上
   if (!from) return to
   let key, toVal, fromVal
-
+  // 如果环境中有symbol，则使用ownKeys获取所有key，否则使用keys
   const keys = hasSymbol
     ? (Reflect.ownKeys(from) as string[])
     : Object.keys(from)
@@ -64,16 +67,22 @@ function mergeData(
   for (let i = 0; i < keys.length; i++) {
     key = keys[i]
     // in case the object is already observed...
+    // 如果数据已经被劫持
     if (key === '__ob__') continue
     toVal = to[key]
     fromVal = from[key]
+    // 如果不递归，或者to中没有该属性
     if (!recursive || !hasOwn(to, key)) {
+      // 直接给to设置值
       set(to, key, fromVal)
     } else if (
+      // 如果fromVal和toVal不同
       toVal !== fromVal &&
+      // fromVal和toVal都是对象
       isPlainObject(toVal) &&
       isPlainObject(fromVal)
     ) {
+      // 递归合并
       mergeData(toVal, fromVal)
     }
   }
@@ -83,16 +92,20 @@ function mergeData(
 /**
  * Data
  */
+// 返回一个函数，这个函数在mergeOption时并没有执行
 export function mergeDataOrFn(
   parentVal: any,
   childVal: any,
   vm?: Component
 ): Function | null {
+  // 如果不是在new 过程中进行的合并
   if (!vm) {
     // in a Vue.extend merge, both should be functions
+    // 子选项无值，直接返回父选项
     if (!childVal) {
       return parentVal
     }
+    // 复选项没有，直接返回子选项
     if (!parentVal) {
       return childVal
     }
@@ -102,6 +115,7 @@ export function mergeDataOrFn(
     // check if parentVal is a function here because
     // it has to be a function to pass previous merges.
     return function mergedDataFn() {
+      // 如果选项是函数，则先执行这个函数，返回值作为需要merge的data
       return mergeData(
         isFunction(childVal) ? childVal.call(this, this) : childVal,
         isFunction(parentVal) ? parentVal.call(this, this) : parentVal
@@ -124,13 +138,16 @@ export function mergeDataOrFn(
     }
   }
 }
-
+// 数据合并策略
 strats.data = function (
-  parentVal: any,
-  childVal: any,
+  parentVal: any, // 一般是mixin中的配置
+  childVal: any, // 一般是组件自己的配置
   vm?: Component
 ): Function | null {
+  // 如果数据不是在new 的时候传入的，这里的意思是，如果是在new的时候传入的，那么data可以使用对象
+  // 在组件定义时，都会使用extends转换成构造函数，这时候vm则为空，或者是mixin时，vm也为空，这时候需要校验data是不是函数
   if (!vm) {
+    // 如果子选项中的data不是函数，警告，vue2中data使用函数，保证组件复用时数据独立
     if (childVal && typeof childVal !== 'function') {
       __DEV__ &&
         warn(
@@ -300,6 +317,7 @@ export function validateComponentName(name: string) {
   if (
     !new RegExp(`^[a-zA-Z][\\-\\.0-9_${unicodeRegExp.source}]*$`).test(name)
   ) {
+    // 检验合法组件名称
     warn(
       'Invalid component name: "' +
         name +
@@ -308,6 +326,7 @@ export function validateComponentName(name: string) {
     )
   }
   if (isBuiltInTag(name) || config.isReservedTag(name)) {
+    // 不能使用 slot component 和原生html标签作为组件名称
     warn(
       'Do not use built-in or reserved HTML elements as component ' +
         'id: ' +
@@ -327,19 +346,29 @@ function normalizeProps(options: Record<string, any>, vm?: Component | null) {
   let i, val, name
   if (isArray(props)) {
     i = props.length
+    // 如果props是数组，遍历每个props
+    // 
     while (i--) {
       val = props[i]
       if (typeof val === 'string') {
+        // 如果prop是字符串，转换成驼峰命名
         name = camelize(val)
         res[name] = { type: null }
       } else if (__DEV__) {
+        // prop不是字符串，警告
         warn('props must be strings when using array syntax.')
       }
     }
   } else if (isPlainObject(props)) {
+    // 如果props是对象，遍历每个key
     for (const key in props) {
       val = props[key]
       name = camelize(key)
+      // prop转驼峰，存储类型
+      // {
+      //   name：string
+      // }
+      // ===》res={name：{type：string}}
       res[name] = isPlainObject(val) ? val : { type: val }
     }
   } else if (__DEV__) {
@@ -356,9 +385,28 @@ function normalizeProps(options: Record<string, any>, vm?: Component | null) {
  * Normalize all injections into Object-based format
  */
 function normalizeInject(options: Record<string, any>, vm?: Component | null) {
+  // 将inject都装换成对象
+  // 原始写法
+  // inject: ['foo', 'bar']
+
+  // 规范化后
+  // inject: {
+  //     foo: { from: 'foo' },
+  //     bar: { from: 'bar' }
+  // }
+
+  // 原始写法
+  // inject: {
+  //   foo: 'bar'  // 从bar注入到foo
+  // }
+  // 规范化后
+  // inject: {
+  //   foo: { from: 'bar' }
+  // }
   const inject = options.inject
   if (!inject) return
   const normalized: Record<string, any> = (options.inject = {})
+  // inject是数组
   if (isArray(inject)) {
     for (let i = 0; i < inject.length; i++) {
       normalized[inject[i]] = { from: inject[i] }
@@ -382,12 +430,29 @@ function normalizeInject(options: Record<string, any>, vm?: Component | null) {
 /**
  * Normalize raw function directives into object format.
  */
+// 指令的两种书写方式
+// 方式1：函数形式（简写）
+// directives: {
+//   focus: function(el) { // 这个函数会被用于 bind 和 update
+//       el.focus()
+//   }
+// }
+
+// 方式2：对象形式（完整）
+// directives: {
+//   focus: {
+//       bind: function(el) { ... },
+//       update: function(el) { ... },
+//       // 可能还有其他钩子：inserted、componentUpdated、unbind
+//   }
+// }
 function normalizeDirectives(options: Record<string, any>) {
   const dirs = options.directives
   if (dirs) {
     for (const key in dirs) {
       const def = dirs[key]
       if (isFunction(def)) {
+        // 函数式指令配置转为对象 这就是为什么函数式指令 会被用于bind和update
         dirs[key] = { bind: def, update: def }
       }
     }
@@ -414,14 +479,17 @@ export function mergeOptions(
   vm?: Component | null
 ): ComponentOptions {
   if (__DEV__) {
+    // 检验组件名称
     checkComponents(child)
   }
 
+  // 如果 child 是函数
+  // 使用 Vue.extend 生成的函数组件，其配置会在options 上，这里都统一成对象配置的形式。方便处理
   if (isFunction(child)) {
     // @ts-expect-error
     child = child.options
   }
-
+  // 规范化props、inject、directives
   normalizeProps(child, vm)
   normalizeInject(child, vm)
   normalizeDirectives(child)
@@ -430,11 +498,14 @@ export function mergeOptions(
   // but only if it is a raw options object that isn't
   // the result of another mergeOptions call.
   // Only merged options has the _base property.
+  // 如果不存在_base，这个_base 指向vue构造函数，在initGlobalAPI的时候Vue放入到了Vue.options上
   if (!child._base) {
+    // 如果组件是extends来的，递归调用mergeOptions，将被进程的组件合并到父选项中
     if (child.extends) {
       parent = mergeOptions(parent, child.extends, vm)
     }
     if (child.mixins) {
+      // 如果具有mixin，对每一个mixin进行合并选项
       for (let i = 0, l = child.mixins.length; i < l; i++) {
         parent = mergeOptions(parent, child.mixins[i], vm)
       }
@@ -444,14 +515,18 @@ export function mergeOptions(
   const options: ComponentOptions = {} as any
   let key
   for (key in parent) {
+    // 先处理父选项中的键
     mergeField(key)
   }
   for (key in child) {
     if (!hasOwn(parent, key)) {
+      // 在处理复选项没有的键，默认情况下使用子选项覆盖
       mergeField(key)
     }
   }
+  // starts中存储的合并不同配置的合并策略
   function mergeField(key: any) {
+    // 获取对应的策略进行合并，默认情况下用child覆盖parent的值
     const strat = strats[key] || defaultStrat
     options[key] = strat(parent[key], child[key], vm, key)
   }
