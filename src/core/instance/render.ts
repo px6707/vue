@@ -23,7 +23,9 @@ export function initRender(vm: Component) {
   vm._staticTrees = null // v-once cached trees
   const options = vm.$options
   const parentVnode = (vm.$vnode = options._parentVnode!) // the placeholder node in parent tree
+  // context 就是父组件的实例 它是在createElement函数中传递给createComponent函数的
   const renderContext = parentVnode && (parentVnode.context as Component)
+  // 内容都放入到插槽属性 slots 中
   vm.$slots = resolveSlots(options._renderChildren, renderContext)
   vm.$scopedSlots = parentVnode
     ? normalizeScopedSlots(
@@ -37,10 +39,12 @@ export function initRender(vm: Component) {
   // args order: tag, data, children, normalizationType, alwaysNormalize
   // internal version is used by render functions compiled from templates
   // @ts-expect-error
+  // 创建虚拟节点的方法
   vm._c = (a, b, c, d) => createElement(vm, a, b, c, d, false)
   // normalization is always applied for the public version, used in
   // user-written render functions.
   // @ts-expect-error
+  // $createElement对于用户手写的render函数，添加更多的数据检查和规范化
   vm.$createElement = (a, b, c, d) => createElement(vm, a, b, c, d, true)
 
   // $attrs & $listeners are exposed for easier HOC creation.
@@ -49,6 +53,7 @@ export function initRender(vm: Component) {
 
   /* istanbul ignore else */
   if (__DEV__) {
+    // 给vm的$attrs和$listeners添加响应式
     defineReactive(
       vm,
       '$attrs',

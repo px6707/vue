@@ -84,6 +84,7 @@ export function initExtend(Vue: GlobalAPI) {
     // 存储父类选项
     Sub.superOptions = Super.options
     Sub.extendOptions = extendOptions
+    // 选项密封一份，作为后续比较的基准
     Sub.sealedOptions = extend({}, Sub.options)
 
     // cache constructor

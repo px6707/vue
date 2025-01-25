@@ -16,6 +16,8 @@ function Vue(options) {
 
 // 给Vue类 添加能力
 //@ts-expect-error Vue has function type
+// 添加初始化函数_init ,同时初始化生命周期，添加父子组件关系，初始化事件、slot、注入、数据和provide
+// 并向当前实例挂载_events、$slots、props、methods、data、computed\_provide属性、给_provide设置父组件的_provide作为原型
 initMixin(Vue)
 //@ts-expect-error Vue has function type
 stateMixin(Vue)

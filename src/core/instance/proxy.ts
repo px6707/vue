@@ -82,6 +82,7 @@ if (__DEV__) {
   }
 
   initProxy = function initProxy(vm) {
+    // 如果当前环境有Proxy
     if (hasProxy) {
       // determine which proxy handler to use
       const options = vm.$options

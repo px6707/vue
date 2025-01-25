@@ -33,29 +33,41 @@ export function setActiveInstance(vm: Component) {
 }
 
 export function initLifecycle(vm: Component) {
+  // 获取vue实例上的选项
   const options = vm.$options
 
   // locate first non-abstract parent
   let parent = options.parent
+  // 如果有父节点并且不是抽象节点
   if (parent && !options.abstract) {
     while (parent.$options.abstract && parent.$parent) {
+      // 向上寻找第一个非抽象节点
       parent = parent.$parent
     }
+    // 父节点建立和子节点的关系
     parent.$children.push(vm)
   }
-
+  // 当前节点添加父节点\根节点关系
   vm.$parent = parent
   vm.$root = parent ? parent.$root : vm
-
+  // 初始化当前vm的子节点为空
   vm.$children = []
   vm.$refs = {}
-
+  // 继承父组件的 provide 数据，如果没有父组件则创建空对象，
+  // 注意这个点，后面在初始化provide的时候，判断子组件的provide和父组件的provide是否相同，如果相同说明没有处理过
   vm._provided = parent ? parent._provided : Object.create(null)
+  // 组件的主 watcher，用于响应式更新
   vm._watcher = null
+  // keep-alive 相关的状态标志
+   // 组件是否被缓存
   vm._inactive = null
+  // 直接的不活跃状态
   vm._directInactive = false
+  // 组件是否已经挂载
   vm._isMounted = false
+  // 组件是否已经销毁
   vm._isDestroyed = false
+  // 组件是否正在被销毁
   vm._isBeingDestroyed = false
 }
 

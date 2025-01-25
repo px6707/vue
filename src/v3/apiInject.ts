@@ -21,11 +21,18 @@ export function resolveProvided(vm: Component): Record<string, any> {
   // own provides object using parent provides object as prototype.
   // this way in `inject` we can simply look up injections from direct
   // parent and let the prototype chain do the work.
+  // 当前组件的_provided
   const existing = vm._provided
+  // 获取父组件的 _provided
   const parentProvides = vm.$parent && vm.$parent._provided
+   // 如果当前组件的 _provided 与父组件的相同
+   // 这里判断parentProvides === existing是否相同，是因为在initlifcyle 的过程中，会把父组件的_provided赋值给子组件。
+   // 所以未经处理的_provide 都会和父组件相同
   if (parentProvides === existing) {
+     // 创建一个新对象，以父组件的 _provided 为原型，这样就能访问到子组件到根组件上所有provide的值了
     return (vm._provided = Object.create(parentProvides))
   } else {
+    // 否则返回当前组件的 _provided
     return existing
   }
 }
