@@ -415,6 +415,7 @@ export function stateMixin(Vue: typeof Component) {
     return this._props
   }
   if (__DEV__) {
+    // data和props不能直接赋值
     dataDef.set = function () {
       warn(
         'Avoid replacing instance root $data. ' +

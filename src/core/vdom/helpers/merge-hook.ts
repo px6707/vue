@@ -22,10 +22,12 @@ export function mergeVNodeHook(
 
   if (isUndef(oldHook)) {
     // no existing hook
+    // 使用统一的错误处理包装wrappedHook
     invoker = createFnInvoker([wrappedHook])
   } else {
     /* istanbul ignore if */
     if (isDef(oldHook.fns) && isTrue(oldHook.merged)) {
+      // 如果之前的hook已经是包装过的，就不用再包装了，只需要把wrappedHook添加进去
       // already a merged invoker
       invoker = oldHook
       invoker.fns.push(wrappedHook)
@@ -34,7 +36,7 @@ export function mergeVNodeHook(
       invoker = createFnInvoker([oldHook, wrappedHook])
     }
   }
-
+  // 设置合并过的标志
   invoker.merged = true
   def[hookKey] = invoker
 }

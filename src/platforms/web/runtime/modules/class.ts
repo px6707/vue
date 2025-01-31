@@ -13,9 +13,10 @@ function updateClass(oldVnode: any, vnode: any) {
     (isUndef(oldData) ||
       (isUndef(oldData.staticClass) && isUndef(oldData.class)))
   ) {
+    // 新旧虚拟节点都没有class或者静态class，直接退出
     return
   }
-
+  // 获取class
   let cls = genClassForVnode(vnode)
 
   // handle transition classes

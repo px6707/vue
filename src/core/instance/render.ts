@@ -99,17 +99,19 @@ export function setCurrentRenderingInstance(vm: Component) {
 
 export function renderMixin(Vue: typeof Component) {
   // install runtime convenience helpers
+  // 编译生成的render函数中，所使用的各种工具函数挂载到Vue.prototype上
   installRenderHelpers(Vue.prototype)
-
+  // 挂载$nextTick函数
   Vue.prototype.$nextTick = function (fn: (...args: any[]) => any) {
     return nextTick(fn, this)
   }
-
+  // 挂载_render函数
   Vue.prototype._render = function (): VNode {
     const vm: Component = this
     const { render, _parentVnode } = vm.$options
-
+    // 如果有父节点且组件已挂载
     if (_parentVnode && vm._isMounted) {
+      // 标准化作用域插槽的格式 合并新旧作用域插槽。子组件更新时，要对父组件传递过来的插槽内容重新合并
       vm.$scopedSlots = normalizeScopedSlots(
         vm.$parent!,
         _parentVnode.data!.scopedSlots,
@@ -131,8 +133,10 @@ export function renderMixin(Vue: typeof Component) {
     try {
       setCurrentInstance(vm)
       currentRenderingInstance = vm
+      // 执行这个实例的render函数，生成虚拟节点
       vnode = render.call(vm._renderProxy, vm.$createElement)
     } catch (e: any) {
+      // render 过程中报错
       handleError(e, vm, `render`)
       // return error render result,
       // or previous vnode to prevent render error causing blank component
@@ -149,6 +153,7 @@ export function renderMixin(Vue: typeof Component) {
           vnode = vm._vnode
         }
       } else {
+        // 出错则使用旧的虚拟节点
         vnode = vm._vnode
       }
     } finally {
@@ -160,7 +165,9 @@ export function renderMixin(Vue: typeof Component) {
       vnode = vnode[0]
     }
     // return empty vnode in case the render function errored out
+    // 如果生成的虚拟节点不是VNode的实例，警告
     if (!(vnode instanceof VNode)) {
+      // 如果是多虚拟根节点，报错，使用空虚拟节点作为当前节点
       if (__DEV__ && isArray(vnode)) {
         warn(
           'Multiple root nodes returned from render function. Render function ' +

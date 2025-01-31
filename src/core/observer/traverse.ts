@@ -42,6 +42,7 @@ function _traverse(val: any, seen: SimpleSet) {
   } else {
     keys = Object.keys(val)
     i = keys.length
+    // 关键是这一行，对value[keys[i]]再次深层遍历，相当于获取响应式对象的属性，触发更新
     while (i--) _traverse(val[keys[i]], seen)
   }
 }

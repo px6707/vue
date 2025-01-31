@@ -87,7 +87,7 @@ export class Observer {
           }
         }
       }
-      // 如果不是浅响应，需要对数组元素进行依赖收集
+      // 如果不是浅响应，需要对数组元素observe
       if (!shallow) {
         this.observeArray(value)
       }
@@ -124,6 +124,7 @@ export class Observer {
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
  */
+// 负责把对象整体变成响应式
 export function observe(
   value: any,
   shallow?: boolean,
@@ -150,6 +151,7 @@ export function observe(
 /**
  * Define a reactive property on an Object.
  */
+// 负责把一个对象的属性变成响应式
 export function defineReactive(
   obj: object,
   key: string,
@@ -273,12 +275,14 @@ export function set(
     return
   }
   const ob = (target as any).__ob__
+  // 如果原始对象是个数组
   if (isArray(target) && isValidArrayIndex(key)) {
     // 给原始数组设置长度
     target.length = Math.max(target.length, key)
     // 将key索引处的值替换成新值
     target.splice(key, 1, val)
     // when mocking for SSR, array methods are not hijacked
+    // 对新的数组响应式
     if (ob && !ob.shallow && ob.mock) {
       observe(val, false, true)
     }
@@ -289,7 +293,7 @@ export function set(
     target[key] = val
     return val
   }
-  // 如果target是Vue实例 或者 再被Observer劫持的情况下有vmCount，则不允许设置响应式属性 vm存在说明是根级别的data
+  // 如果target是Vue实例 或者 再被Observer劫持的情况下有vmCount，则不允许设置响应式属性 vmCount存在说明多个实例使用这个对象作为根级别的data
   // 性能考虑：
   // 根级响应式数据的变化会触发整个组件树的重新渲染
   // 运行时添加根级属性可能导致不必要的性能开销

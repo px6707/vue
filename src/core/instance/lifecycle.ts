@@ -70,18 +70,21 @@ export function initLifecycle(vm: Component) {
   // 组件是否正在被销毁
   vm._isBeingDestroyed = false
 }
-
+// Vue类上挂载_update、$forceUpdate、$destroy方法
 export function lifecycleMixin(Vue: typeof Component) {
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
     const prevEl = vm.$el
     const prevVnode = vm._vnode
+  // 标识当前正在更新的组件实例，在patch、create-compoonent时使用
     const restoreActiveInstance = setActiveInstance(vm)
     vm._vnode = vnode
     // Vue.prototype.__patch__ is injected in entry points
     // based on the rendering backend used.
+    // 之前没有虚拟节点，说明是第一次渲染
     if (!prevVnode) {
       // initial render
+      // 生成真实DOM节点,将当前组件的挂载节点赋值给$el
       vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
     } else {
       // updates
@@ -89,6 +92,7 @@ export function lifecycleMixin(Vue: typeof Component) {
     }
     restoreActiveInstance()
     // update __vue__ reference
+    // 更新DOM元素和Vue实例之间的引用
     if (prevEl) {
       prevEl.__vue__ = null
     }
@@ -96,11 +100,14 @@ export function lifecycleMixin(Vue: typeof Component) {
       vm.$el.__vue__ = vm
     }
     // if parent is an HOC, update its $el as well
+    // 在透明的高阶组件（高阶组件不渲染额外节点）的情况下，HOC没有额外的渲染内容，只是一个过渡的包装，为了保证HOC组件能够正确的访问实际DOM
     let wrapper: Component | undefined = vm
     while (
       wrapper &&
       wrapper.$vnode &&
       wrapper.$parent &&
+      // _vnode 是当前组件的虚拟节点 $vnode 是当前组件在父组件中的虚拟节点
+      //  通俗的说，_vode就是子组件的模版内容编译出的虚拟节点， $vode是父组件编译时的，子组件节点
       wrapper.$vnode === wrapper.$parent._vnode
     ) {
       wrapper.$parent.$el = wrapper.$el
@@ -119,14 +126,17 @@ export function lifecycleMixin(Vue: typeof Component) {
 
   Vue.prototype.$destroy = function () {
     const vm: Component = this
+    // 已经开始销毁
     if (vm._isBeingDestroyed) {
       return
     }
+    // 调用beforeDestroy钩子
     callHook(vm, 'beforeDestroy')
     vm._isBeingDestroyed = true
     // remove self from parent
     const parent = vm.$parent
     if (parent && !parent._isBeingDestroyed && !vm.$options.abstract) {
+      // 从父组件中移除
       remove(parent.$children, vm)
     }
     // teardown scope. this includes both the render watcher and other
@@ -134,18 +144,24 @@ export function lifecycleMixin(Vue: typeof Component) {
     vm._scope.stop()
     // remove reference from data ob
     // frozen object may not have observer.
+//     vmCount 记录了有多少个组件实例在使用这个响应式数据
+// 当组件销毁时，需要减少计数，表示少了一个使用者
+// 这是为了内存管理，当 vmCount 为 0 时，表示没有组件在使用这个响应式数据了
     if (vm._data.__ob__) {
       vm._data.__ob__.vmCount--
     }
     // call the last hook...
     vm._isDestroyed = true
     // invoke destroy hooks on current rendered tree
+    // 新的vnode为null， 用来更新销毁后的视图
     vm.__patch__(vm._vnode, null)
+    // 调用destroyed钩子
     // fire destroyed hook
     callHook(vm, 'destroyed')
     // turn off all instance listeners.
     vm.$off()
     // remove __vue__ reference
+    // 当前节点和DOM、父节点的关系断开
     if (vm.$el) {
       vm.$el.__vue__ = null
     }

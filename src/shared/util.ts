@@ -141,6 +141,7 @@ export const isReservedAttribute = makeMap('key,ref,slot,slot-scope,is')
 /**
  * Remove an item from an array.
  */
+// 从数组中移除某个元素
 export function remove(arr: Array<any>, item: any): Array<any> | void {
   const len = arr.length
   if (len) {

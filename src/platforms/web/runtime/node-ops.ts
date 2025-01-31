@@ -22,13 +22,15 @@ export function createElementNS(namespace: string, tagName: string): Element {
 }
 
 export function createTextNode(text: string): Text {
+  // 创建文本节点
   return document.createTextNode(text)
 }
 
 export function createComment(text: string): Comment {
+  // 创建注释
   return document.createComment(text)
 }
-
+// 在参考节点前插入节点
 export function insertBefore(
   parentNode: Node,
   newNode: Node,

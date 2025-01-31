@@ -6,6 +6,7 @@ export function genClassForVnode(vnode: VNodeWithData): string {
   let data = vnode.data
   let parentNode: VNode | VNodeWithData | undefined = vnode
   let childNode: VNode | VNodeWithData = vnode
+  // 子组件继承父组件的class
   while (isDef(childNode.componentInstance)) {
     childNode = childNode.componentInstance._vnode!
     if (childNode && childNode.data) {
@@ -39,6 +40,7 @@ export function renderClass(
   dynamicClass: any
 ): string {
   if (isDef(staticClass) || isDef(dynamicClass)) {
+    // 组合静态class和动态class
     return concat(staticClass, stringifyClass(dynamicClass))
   }
   /* istanbul ignore next */
@@ -50,12 +52,15 @@ export function concat(a?: string | null, b?: string | null): string {
 }
 
 export function stringifyClass(value: any): string {
+  // 如果class是数组，调用stringifyArray
   if (Array.isArray(value)) {
     return stringifyArray(value)
   }
+  // 如果class是对象，调用stringifyObject
   if (isObject(value)) {
     return stringifyObject(value)
   }
+  // 如果class是字符串，直接返回
   if (typeof value === 'string') {
     return value
   }
@@ -77,6 +82,7 @@ function stringifyArray(value: Array<any>): string {
 
 function stringifyObject(value: Object): string {
   let res = ''
+  // 如果是对象，遍历每个key，如果值为true，拼接key
   for (const key in value) {
     if (value[key]) {
       if (res) res += ' '

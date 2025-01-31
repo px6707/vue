@@ -550,10 +550,13 @@ export function resolveAsset(
   }
   const assets = options[type]
   // check local registration variations first
+  // 直接匹配
   if (hasOwn(assets, id)) return assets[id]
   const camelizedId = camelize(id)
+  // 驼峰式匹配 (如 v-my-dir -> vMyDir)
   if (hasOwn(assets, camelizedId)) return assets[camelizedId]
   const PascalCaseId = capitalize(camelizedId)
+  // 首字母大写匹配 (如 vMyDir -> VMyDir)
   if (hasOwn(assets, PascalCaseId)) return assets[PascalCaseId]
   // fallback to prototype chain
   const res = assets[id] || assets[camelizedId] || assets[PascalCaseId]

@@ -61,15 +61,18 @@ export function _createElement(
     return createEmptyVNode()
   }
   // object syntax in v-bind
+  // 更新is指定的tag
   if (isDef(data) && isDef(data.is)) {
     tag = data.is
   }
   if (!tag) {
     // in case of component :is set to falsy value
+    // tag不存在，返回空节点
     return createEmptyVNode()
   }
   // warn against non-primitive key
   if (__DEV__ && isDef(data) && isDef(data.key) && !isPrimitive(data.key)) {
+    // 不能使用对象作为key
     warn(
       'Avoid using non-primitive value as key, ' +
         'use string/number value instead.',
@@ -90,6 +93,7 @@ export function _createElement(
   let vnode, ns
   if (typeof tag === 'string') {
     let Ctor
+    // 如果vnode有ns，svg等使用的命名空间
     ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag)
     if (config.isReservedTag(tag)) {
       // platform built-in elements
@@ -104,6 +108,7 @@ export function _createElement(
           context
         )
       }
+      // 如果是平台保留标签，创建对应的vnode
       vnode = new VNode(
         config.parsePlatformTagName(tag),
         data,
@@ -116,6 +121,7 @@ export function _createElement(
       (!data || !data.pre) &&
       isDef((Ctor = resolveAsset(context.$options, 'components', tag)))
     ) {
+      // 是组件则创建组件的vnode
       // component
       vnode = createComponent(Ctor, data, context, children, tag)
     } else {
@@ -125,6 +131,7 @@ export function _createElement(
       vnode = new VNode(tag, data, children, undefined, undefined, context)
     }
   } else {
+    // tag不是字符串，使用createComponent创建
     // direct component options / constructor
     vnode = createComponent(tag as any, data, context, children)
   }

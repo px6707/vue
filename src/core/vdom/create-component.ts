@@ -44,6 +44,7 @@ const componentVNodeHooks = {
       const mountedNode: any = vnode // work around flow
       componentVNodeHooks.prepatch(mountedNode, mountedNode)
     } else {
+      // 创建的组件实例赋值给vnode.componentInstance
       const child = (vnode.componentInstance = createComponentInstanceForVnode(
         vnode,
         activeInstance
@@ -68,6 +69,7 @@ const componentVNodeHooks = {
     const { context, componentInstance } = vnode
     if (!componentInstance._isMounted) {
       componentInstance._isMounted = true
+      // 组件插入时，调用mounted钩子
       callHook(componentInstance, 'mounted')
     }
     if (vnode.data.keepAlive) {
@@ -88,6 +90,7 @@ const componentVNodeHooks = {
     const { componentInstance } = vnode
     if (!componentInstance._isDestroyed) {
       if (!vnode.data.keepAlive) {
+        // 组件销毁时，调用destroy钩子
         componentInstance.$destroy()
       } else {
         deactivateChildComponent(componentInstance, true /* direct */)
@@ -105,6 +108,7 @@ export function createComponent(
   children?: Array<VNode>,
   tag?: string
 ): VNode | Array<VNode> | void {
+  // 没有组件的构造函数，返回
   if (isUndef(Ctor)) {
     return
   }
@@ -119,6 +123,7 @@ export function createComponent(
   // if at this stage it's not a constructor or an async component factory,
   // reject.
   if (typeof Ctor !== 'function') {
+    // 构造函数不是函数，警告
     if (__DEV__) {
       warn(`Invalid Component definition: ${String(Ctor)}`, context)
     }
@@ -158,6 +163,7 @@ export function createComponent(
   // functional component
   // @ts-expect-error
   if (isTrue(Ctor.options.functional)) {
+    // 函数式组件使用createFunctionalComponent创建
     return createFunctionalComponent(
       Ctor as typeof Component,
       propsData,
@@ -188,11 +194,13 @@ export function createComponent(
   }
 
   // install component management hooks onto the placeholder node
+  // 装载组件的hook
   installComponentHooks(data)
 
   // return a placeholder vnode
   // @ts-expect-error
   const name = getComponentName(Ctor.options) || tag
+  // 创建虚拟节点
   const vnode = new VNode(
     // @ts-expect-error
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,
@@ -226,9 +234,10 @@ export function createComponentInstanceForVnode(
     options.render = inlineTemplate.render
     options.staticRenderFns = inlineTemplate.staticRenderFns
   }
+  // 使用vue的构造函数创建实例，传入options
   return new vnode.componentOptions.Ctor(options)
 }
-
+// 装载hooks
 function installComponentHooks(data: VNodeData) {
   const hooks = data.hook || (data.hook = {})
   for (let i = 0; i < hooksToMerge.length; i++) {

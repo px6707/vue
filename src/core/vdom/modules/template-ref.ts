@@ -17,11 +17,14 @@ export default {
   },
   update(oldVnode: VNodeWithData, vnode: VNodeWithData) {
     if (oldVnode.data.ref !== vnode.data.ref) {
+      // 清除旧的ref
       registerRef(oldVnode, true)
+      // 注册新的ref
       registerRef(vnode)
     }
   },
   destroy(vnode: VNodeWithData) {
+    // 销毁时，清除ref
     registerRef(vnode, true)
   }
 }
@@ -34,7 +37,7 @@ export function registerRef(vnode: VNodeWithData, isRemoval?: boolean) {
   const refValue = vnode.componentInstance || vnode.elm
   const value = isRemoval ? null : refValue
   const $refsValue = isRemoval ? undefined : refValue
-
+  // 如果ref是一个函数，则调用
   if (isFunction(ref)) {
     invokeWithErrorHandling(ref, vm, [value], vm, `template ref function`)
     return
@@ -44,11 +47,13 @@ export function registerRef(vnode: VNodeWithData, isRemoval?: boolean) {
   const _isString = typeof ref === 'string' || typeof ref === 'number'
   const _isRef = isRef(ref)
   const refs = vm.$refs
-
+  // 如果是字符串
   if (_isString || _isRef) {
+    // 在for循环内部
     if (isFor) {
       const existing = _isString ? refs[ref] : ref.value
       if (isRemoval) {
+        // 如果是清除，在已经有的ref中删除
         isArray(existing) && remove(existing, refValue)
       } else {
         if (!isArray(existing)) {
