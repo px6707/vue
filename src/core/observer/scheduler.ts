@@ -84,10 +84,15 @@ function flushSchedulerQueue() {
   //    user watchers are created before the render watcher)
   // 3. If a component is destroyed during a parent component's watcher run,
   //    its watchers can be skipped.
+  // 排序队列
+  // 1. 组件更新顺序：父组件先于子组件
+  // 2. 用户 watcher 先于渲染 watcher
+  // 3. 如果父组件在更新时销毁子组件，子组件的 watcher 可以被跳过
   queue.sort(sortCompareFn)
 
   // do not cache length because more watchers might be pushed
   // as we run existing watchers
+  // 遍历队列，执行 watcher.run()
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
     if (watcher.before) {
@@ -115,16 +120,20 @@ function flushSchedulerQueue() {
   // keep copies of post queues before resetting state
   const activatedQueue = activatedChildren.slice()
   const updatedQueue = queue.slice()
-
+  // watcher全部执行完成后，重置状态
   resetSchedulerState()
 
   // call component updated and activated hooks
+  // 处理 keep-alive 组件。当一个被 keep-alive 的组件在 patch 过程中被激活时，会调用其 activated 钩子函数。
   callActivatedHooks(activatedQueue)
+  // 在组件更新完成后调用 updated 生命周期钩子
   callUpdatedHooks(updatedQueue)
+  // 清理依赖收集。在一轮更新完成后，会清理掉不再需要的依赖关系，防止内存泄漏。
   cleanupDeps()
 
   // devtool hook
   /* istanbul ignore if */
+  // 给 Vue DevTools 使用的钩子。当更新队列刷新完成时，会通知 DevTools，这样 DevTools 就能够追踪到组件的更新情况。
   if (devtools && config.devtools) {
     devtools.emit('flush')
   }
@@ -166,6 +175,7 @@ function callActivatedHooks(queue) {
  */
 export function queueWatcher(watcher: Watcher) {
   const id = watcher.id
+  // 已经存在的 watcher 会被跳过
   if (has[id] != null) {
     return
   }
@@ -176,8 +186,10 @@ export function queueWatcher(watcher: Watcher) {
 
   has[id] = true
   if (!flushing) {
+    // 如果没有在刷新，直接入队
     queue.push(watcher)
   } else {
+    // 如果正在刷新，需要按照 id 顺序插入到合适的位置
     // if already flushing, splice the watcher based on its id
     // if already past its id, it will be run next immediately.
     let i = queue.length - 1
@@ -187,6 +199,9 @@ export function queueWatcher(watcher: Watcher) {
     queue.splice(i + 1, 0, watcher)
   }
   // queue the flush
+  // 在waiting为true的情况下，只会把新加的 watcher 加入queue队列
+  // 直到queue中的watcher执行完成后，waiting变成fasle
+  // 才会在执行下一次flushSchedulerQueue来执行watcher的run
   if (!waiting) {
     waiting = true
 
@@ -194,6 +209,16 @@ export function queueWatcher(watcher: Watcher) {
       flushSchedulerQueue()
       return
     }
+    // 在下一个 tick 刷新队列
+    // 将watcher.run() 也就是更新视图方法 放入微任务队列
+    // 如果在代码中
+    // this.message = 'hello'
+    // this.$nextTick(() => {
+    //   dom已经更新
+    // })
+    // 修改message的值，会让渲染watcher的更新放入队列
+    // this.$nextTick 会把回调放在flushSchedulerQueue的后面
+    // 保证了，先更新视图，再触发组件中的nextTick的回调
     nextTick(flushSchedulerQueue)
   }
 }

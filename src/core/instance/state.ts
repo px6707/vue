@@ -184,6 +184,7 @@ function initData(vm: Component) {
     }
   }
   // observe data
+  // 将数据进行响应式
   const ob = observe(data)
   ob && ob.vmCount++
 }

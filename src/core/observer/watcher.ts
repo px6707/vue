@@ -214,6 +214,7 @@ export default class Watcher implements DepTarget {
     } else if (this.sync) {
       this.run()
     } else {
+      // 队列处理，保证数据快速变化多次，最终只会触发一次更新
       queueWatcher(this)
     }
   }

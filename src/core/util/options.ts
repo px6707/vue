@@ -140,7 +140,7 @@ export function mergeDataOrFn(
 }
 // 数据合并策略
 strats.data = function (
-  parentVal: any, // 一般是mixin中的配置
+  parentVal: any, // 一般是mixin、全局中的配置
   childVal: any, // 一般是组件自己的配置
   vm?: Component
 ): Function | null {

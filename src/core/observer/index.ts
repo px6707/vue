@@ -161,6 +161,7 @@ export function defineReactive(
   mock?: boolean,
   observeEvenIfShallow = false
 ) {
+  // 一个key一个dep
   const dep = new Dep()
   // 如果obj不可配置，则不能响应式
   const property = Object.getOwnPropertyDescriptor(obj, key)
