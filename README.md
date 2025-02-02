@@ -899,3 +899,6 @@ initState中对数据进行了响应式处理。Vue 的响应式系统主要由�
     - 在队列执行run之后会触发updated钩子
 
 4. 批量更新
+    - queueWatcher 函数中，会将更新函数放入到nextTick队列中，且添加waiting标志位，在flushSchedulerQueue执行更新函数的时候waiting为true，更新函数只会进入队列而不执行。当flushSchedulerQueue执行完成后，waiting标志位会变为false，队列中的更新函数会执行
+    - vue组件中的nextTick回调会写在数据更新之后，这个回调也会放在nextTick的队列中，且顺序在更新函数之后
+    - 等更新函数执行完成后，才会执行组件中的nextTick回调，保证了能够拿到最新的DOM
