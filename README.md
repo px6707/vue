@@ -162,7 +162,7 @@ Vue.prototype.$mount= function (
 在initGlobalAPI中添加了mergeOptions、defineReactive、use、mixin、extend、component、filter、directive等工具函数。
 
 ### 3. 扩展Vue原型能力
-在Vue本体的文件中，通过6个函数对Vue本体进行了扩展，分别是
+在Vue本体的文件中，通过5个函数对Vue本体进行了扩展，分别是
 文件：[core/index.ts](./src/core/index.ts)
   ```typescript
   import { initMixin } from './init'
